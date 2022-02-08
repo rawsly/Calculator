@@ -1,7 +1,3 @@
-const calculatorDiv = $('#calculator');
-const categoriesContainer = $('#v-pills-tab');
-const tabContentContainer = $('#v-pills-tabContent');
-
 const BEDROOM_ITEMS = [
   {
     id: 'single-bed',
@@ -107,13 +103,27 @@ const CATEGORIES = [
   },
 ];
 
+function calculateTotal() {
+  let sum = 0;
+  CATEGORIES.forEach((category, index) => {
+    category.items.forEach((item) => {
+      const unitVal = parseFloat($(`#${category.id}-${item.id}-unit`).val());
+      const unitCount = parseInt($(`#${category.id}-${item.id}-count`).val())
+      sum += unitVal * unitCount;
+    });
+  });
+  return sum;
+}
+
 function updateState(tabId, tabItemId, type) {
+  const p = $(`#tab-item-${tabItemId} p`);
+  const minusBtn = $(`#${tabId}-${tabItemId}-minus`);
   if (type === 1) {
-    $(`#tab-item-${tabItemId} p`).addClass('bold');
-    $(`#${tabId}-${tabItemId}-minus`).prop('disabled', false);
+    p.addClass('bold');
+    minusBtn.prop('disabled', false);
   } else  {
-    $(`#tab-item-${tabItemId} p`).removeClass('bold');
-    $(`#${tabId}-${tabItemId}-minus`).prop('disabled', true);
+    p.removeClass('bold');
+    minusBtn.prop('disabled', true);
   }
 }
 
@@ -124,6 +134,7 @@ function handleItemIncreaseClick(e, tabId, tabItemId) {
   if (currentCount === 0) {
     updateState(tabId, tabItemId, 1);
   }
+  calculateTotal();
 }
 
 function handleItemDecreaseClick(e, tabId, tabItemId) {
@@ -133,6 +144,7 @@ function handleItemDecreaseClick(e, tabId, tabItemId) {
   if (currentCount === 1) {
     updateState(tabId, tabItemId, 0);
   }
+  calculateTotal();
 }
 
 function handleItemCountChange(e, tabId, tabItemId) {
@@ -142,10 +154,11 @@ function handleItemCountChange(e, tabId, tabItemId) {
   } else {
     updateState(tabId, tabItemId, 1);
   }
+  calculateTotal();
 }
 
-function insertTabsAndContent(data, tabsContainer, contentContainer) {
-  data.forEach((tab, index) => {
+function insertTabsAndContent(tabsContainerId, contentContainerId) {
+  CATEGORIES.forEach((tab, index) => {
     const tabId = `tab-${tab.id}`;
     const active = index === 0 ? 'active' : '';
     const show = index === 0 ? 'show' : '';
@@ -155,11 +168,14 @@ function insertTabsAndContent(data, tabsContainer, contentContainer) {
         <span>${tab.text}</span>
       </button>
     `;
+    let tabsContainer = $(`#${tabsContainerId}`);
     tabsContainer.append(tabCategoryContent);
 
     const tabContentContainer = `
       <div class="tab-pane fade ${show} ${active}" id="${tab.id}" role="tabpanel" aria-labelledby="${tabId}"></div>
     `;
+
+    let contentContainer = $(`#${contentContainerId}`);
     contentContainer.append(tabContentContainer);
     tab.items.forEach((tabItem, tabItemIndex) => {
       const newItem = `
@@ -185,11 +201,18 @@ function insertTabsAndContent(data, tabsContainer, contentContainer) {
     });
   });
 }
-insertTabsAndContent(CATEGORIES, categoriesContainer, tabContentContainer);
 
-// write a calculation function
-function calculateTotal(data) {
-  let sum = 0;
-  data.forEach(item => sum += item);
-  return sum;
+function createCalculator(containerId, categoriesContainerId, tabContentContainerId) {
+  $(`#${containerId}`).append(`
+    <div class="d-flex align-items-start">
+      <div class="nav flex-column nav-pills me-3" id="${categoriesContainerId}" role="tablist" aria-orientation="vertical">
+      </div>
+      <div class="tab-content" id="${tabContentContainerId}">
+      </div>
+    </div>
+  `);
+
+  insertTabsAndContent(categoriesContainerId, tabContentContainerId);
 }
+
+createCalculator('calculator', 'v-pills-tab', 'v-pills-tabContent');
